@@ -1,46 +1,101 @@
 # -*- coding: utf-8 -*-
+from .request_api import RequestAPI
+class SonarrAPI(RequestAPI):
 
-import requests
+    def __init__(
+            self, 
+            host_url: str, 
+            api_key: str,
+        ):
+        """Constructor requires Host-URL and API-KEY
 
-
-class SonarrAPI(object):
-
-    def __init__(self, host_url, api_key):
-        """Constructor requires Host-URL and API-KEY"""
-        self.host_url = host_url
-        self.api_key = api_key
-
+            Args:
+                host_url (str): Host url to sonarr.
+                api_key: API key from Sonarr. You can find this
+        """
+        super().__init__(host_url, api_key)
 
     # ENDPOINT CALENDAR
-    def get_calendar(self):
+    def get_calendar(
+            self, 
+            start_date: str=None, 
+            end_date: str=None
+        ):
         # optional params: start (date) & end (date)
-        """Gets upcoming episodes, if start/end are not supplied episodes airing today and tomorrow will be returned"""
-        res = self.request_get("{}/calendar".format(self.host_url))
+        """Gets upcoming episodes, if start/end are not supplied episodes 
+        airing today and tomorrow will be returned
+        
+            Returns:
+                List of dict's from response.
+
+        """
+        path = "/api/calendar"
+        res = self.request_get(path)
         return res.json()
 
 
     # ENDPOINT COMMAND
-    def command(self):
+    def command(self, path, **kwargs):
+        """Command Function
+        """
         pass
+
+    
+    def manual_import(self, **kwargs):
+        """Manual import command
+            Kwargs:
+                folder (str): Folder to manually look at.
+                sort_by (str): What field to sort by.
+                order (str): desc or asc. 
+        
+        """     
+        url_params = {
+            'folder': kwargs.get('folder', "/"),
+            'sort_by': kwargs.get('sort_by', "qualityWeight"),
+            'order': kwargs.get('sort_by', "desc"),
+            'apikey': self.api_key
+        }        
+        
+        path = '/api/manualimport'
+
+        response = self.request_get(path, **url_params)
+        return response
+
+    def auto_manual_import(self, **kwargs):
+        """Manual import command
+            Kwargs:
+                folder (str): Folder to manually look at.
+                sort_by (str): What field to sort by.
+                order (str): desc or asc. 
+        
+        """     
+        manual_import = self.manual_import(**kwargs)
+
 
 
 
     # ENDPOINT DISKSPACE
     def get_diskspace(self):
         """Return Information about Diskspace"""
-        res = self.request_get("{}/diskspace".format(self.host_url))
+        path = "/diskspace"
+        res = self.request_get(path)
         return res.json()
 
 
     # ENDPOINT EPISODE
-    def get_episodes_by_series_id(self, series_id):
-        """Returns all episodes for the given series"""
-        res = self.request_get("{}/episode?seriesId={}".format(self.host_url, series_id))
+    def get_episodes_by_series_id(self, **kwargs):
+        """Returns all episodes for the given series
+            Kwargs:
+                seriesId
+        """
+        path = "/episode"
+        res = self.request_get(path, **kwargs)
         return res.json()
 
     def get_episode_by_episode_id(self, episode_id):
         """Returns the episode with the matching id"""
-        res = self.request_get("{}/episode/{}".format(self.host_url, episode_id))
+        path = "/episode/{}".format(episode_id)
+        res = self.request_get(path)
         return res.json()
 
     def upd_episode(self, data):
@@ -48,26 +103,33 @@ class SonarrAPI(object):
         """Update the given episodes, currently only monitored is changed, all other modifications are ignored"""
         '''NOTE: All parameters (you should perform a GET/{id} and submit the full body with the changes,
         as other values may be editable in the future.'''
-        res = self.request_put("{}/episode".format(self.host_url, data))
+        path = "/episode"
+        res = self.request_put(path, data)
         return res.json()
 
 
     # ENDPOINT EPISODE FILE
-    def get_episode_files_by_series_id(self, series_id):
-        """Returns all episode files for the given series"""
-        res = self.request_get("{}/episodefile?seriesId={}".format(self.host_url, series_id))
+    def get_episode_files_by_series_id(self, **kwargs):
+        """Returns all episode files for the given series
+            Kwargs:
+                seriesId (str): 
+        """
+        path = "/episodefile"
+        res = self.request_get(path, **kwargs)
         return res.json()
 
     # TEST THIS
     def get_episode_file_by_episode_id(self, episode_id):
         """Returns the episode file with the matching id"""
-        res = self.request_get("{}/episodefile/{}".format(self.host_url, episode_id))
+        path = "/episodefile/{}".format(episode_id)
+        res = self.request_get(path)
         return res.json()
 
     # TEST THIS
     def rem_episode_file_by_episode_id(self, episode_id):
         """Delete the given episode file"""
-        res = self.request_del("{}/episodefile/{}".format(self.host_url, episode_id))
+        path = "/episodefile/{}".format(episode_id)
+        res = self.request_del(path, data=None)
         return res.json()
 
 
@@ -75,7 +137,8 @@ class SonarrAPI(object):
     # DOES NOT WORK
     def get_history(self):
         """Gets history (grabs/failures/completed)"""
-        res = self.request_get("{}/history".format(self.host_url))
+        path = "/history"
+        res = self.request_get(path)
         return res.json()
 
 
@@ -83,21 +146,24 @@ class SonarrAPI(object):
     # DOES NOT WORK
     def get_wanted_missing(self):
         """Gets missing episode (episodes without files)"""
-        res = self.request_get("{}/wanted/missing/".format(self.host_url))
+        path = "/wanted/missing/"
+        res = self.request_get(path)
         return res.json()
 
 
     # ENDPOINT QUEUE
     def get_queue(self):
         """Gets current downloading info"""
-        res = self.request_get("{}/queue".format(self.host_url))
+        path = "/queue"
+        res = self.request_get(path)
         return res.json()
 
 
     # ENDPOINT PROFILE
     def get_quality_profiles(self):
         """Gets all quality profiles"""
-        res = self.request_get("{}/profile".format(self.host_url))
+        path = "/profile"
+        res = self.request_get(path)
         return res.json()
 
 
@@ -105,45 +171,49 @@ class SonarrAPI(object):
 
 
     # ENDPOINT RELEASE/PUSH
-    def push_release(self, title, downloadUrl, protocol, publishDate):
+    def push_release(self, **kwargs):
         """Notifies Sonarr of a new release.
             title: release name
             downloadUrl: .torrent file URL
             protocol: usenet / torrent
             publishDate: ISO8601 date string
+
+            Kwargs:
+                title (str): 
+                downloadUrl (str):
+                protocol (str):
+                publishDate (str):
         """
-        res = self.request_post(
-                "{}/release/push".format(self.host_url),
-                {
-                    'title': title,
-                    'downloadUrl': downloadUrl,
-                    'protocol': protocol,
-                    'publishDate': publishDate
-                })
+        path = "/release/push"
+        res = self.request_post(path, data=kwargs)
         return res.json()
 
 
     # ENDPOINT ROOTFOLDER
     def get_root_folder(self):
         """Returns the Root Folder"""
-        res = self.request_get("{}/rootfolder".format(self.host_url))
+        path = "/rootfolder"
+        res = self.request_get(path)
         return res.json()
 
 
     # ENDPOINT SERIES
     def get_series(self):
         """Return all series in your collection"""
-        res = self.request_get("{}/series".format(self.host_url))
+        path = "/series"
+        res = self.request_get(path)
         return res.json()
 
     def get_series_by_series_id(self, series_id):
         """Return the series with the matching ID or 404 if no matching series is found"""
-        res = self.request_get("{}/series/{}".format(self.host_url, series_id))
+        path = "/series/{}".format(series_id)
+        res = self.request_get(path)
         return res.json()
 
     def constuct_series_json(self, tvdbId, quality_profile):
         """Searches for new shows on trakt and returns Series object to add"""
-        res = self.request_get("{}/series/lookup?term={}".format(self.host_url, 'tvdbId:' + str(tvdbId)))
+        path = "/series/lookup?term={}".format('tvdbId:' + str(tvdbId))
+        res = self.request_get(path)
         s_dict = res.json()[0]
 
         # get root folder path
@@ -167,12 +237,14 @@ class SonarrAPI(object):
 
     def add_series(self, series_json):
         """Add a new series to your collection"""
-        res = self.request_post("{}/series".format(self.host_url), data=series_json)
+        path = "/series"
+        res = self.request_post(path, data=series_json)
         return res.json()
 
     def upd_series(self, data):
         """Update an existing series"""
-        res = self.request_put("{}/series".format(self.host_url), data)
+        path = "/series"
+        res = self.request_put(path, data)
         return res.json()
 
     def rem_series(self, series_id, rem_files=False):
@@ -182,54 +254,26 @@ class SonarrAPI(object):
             # 'id': series_id,
             'deleteFiles': 'true'
         }
-        res = self.request_del("{}/series/{}".format(self.host_url, series_id), data)
+        path = "/series/{}".format(series_id)
+        res = self.request_del(path, data)
         return res.json()
 
 
     # ENDPOINT SERIES LOOKUP
-    def lookup_series(self, query):
-        """Searches for new shows on trakt"""
-        res = self.request_get("{}/series/lookup?term={}".format(self.host_url, query))
+    def lookup_series(self, **kwargs):
+        """Searches for new shows on trakt
+        
+            Kwargs:
+                term (str): term filter for lookup_series.
+        """
+        path = "/series/lookup"
+        res = self.request_get(path, **kwargs)
         return res.json()
 
 
     # ENDPOINT SYSTEM-STATUS
     def get_system_status(self):
         """Returns the System Status"""
-        res = self.request_get("{}/system/status".format(self.host_url))
+        path = "/system/status"
+        res = self.request_get(path)
         return res.json()
-
-
-
-    # REQUESTS STUFF
-    def request_get(self, url, data={}):
-        """Wrapper on the requests.get"""
-        headers = {
-            'X-Api-Key': self.api_key
-        }
-        res = requests.get(url, headers=headers, json=data)
-        return res
-
-    def request_post(self, url, data):
-        """Wrapper on the requests.post"""
-        headers = {
-            'X-Api-Key': self.api_key
-        }
-        res = requests.post(url, headers=headers, json=data)
-        return res
-
-    def request_put(self, url, data):
-        """Wrapper on the requests.put"""
-        headers = {
-            'X-Api-Key': self.api_key
-        }
-        res = requests.put(url, headers=headers, json=data)
-        return res
-
-    def request_del(self, url, data):
-        """Wrapper on the requests.delete"""
-        headers = {
-            'X-Api-Key': self.api_key
-        }
-        res = requests.delete(url, headers=headers, json=data)
-        return res
