@@ -1,6 +1,8 @@
  
-import requests
 from urllib.parse import urlencode
+
+import requests
+
 
 class RequestAPI:
 
@@ -21,7 +23,7 @@ class RequestAPI:
         self.auth = None
 
     def basic_auth(self, username, password):
-        """If you have basic authentication setup you will need to pass your
+        """If you have basic authentication setup you will need to pass yourpyli
         username and passwords to the requests.auth.HTTPBASICAUTH() method.
 
         Args:
@@ -45,17 +47,32 @@ class RequestAPI:
         headers = {
             'X-Api-Key': self.api_key
         }
-        encoded_params = urlencode(kwargs)
-        request_url = "{url}{path}?{params}".format(
+        request_url = "{url}{path}".format(
             url = self.host_url,
-            path=path,
-            params=encoded_params
+            path=path
         )
+        try:
+            encoded_params = urlencode(kwargs)
+            request_url = "{}?{}".format(
+                request_url,
+                encoded_params
+            )
+        except:
+            pass
+
         res = self.session.get(request_url, headers=headers, auth=self.auth)
         return res
 
     def request_post(self, path, data):
-        """Wrapper on the requests.post"""
+        """Wrapper on the requests.post
+        
+            Args:
+                path (str): Path to API. E.g. /api/manualimport
+                data (dict): data payload to send with request.
+
+            Returns:
+                requests.models.Response: Response object form requests.     
+        """
         headers = {
             'X-Api-Key': self.api_key
         }
@@ -72,7 +89,15 @@ class RequestAPI:
         return res
 
     def request_put(self, path, data):
-        """Wrapper on the requests.put"""
+        """Wrapper on the requests.put
+        
+            Args:
+                path (str): Path to API. E.g. /api/manualimport
+                data (dict): data payload to send with request.
+
+            Returns:
+                requests.models.Response: Response object form requests.    
+        """
         headers = {
             'X-Api-Key': self.api_key
         }
@@ -89,7 +114,15 @@ class RequestAPI:
         return res
 
     def request_del(self, path, data):
-        """Wrapper on the requests.delete"""
+        """Wrapper on the requests.delete
+        
+            Args:
+                path (str): Path to API. E.g. /api/manualimport
+                data (dict): data payload to send with request.
+
+            Returns:
+                res (Request Response Object)
+        """
         headers = {
             'X-Api-Key': self.api_key
         }
